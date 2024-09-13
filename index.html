@@ -225,25 +225,31 @@
       <!-- Puzzle Canvas -->
       <canvas id="gameCanvas" width="600" height="600"></canvas>
 
-      <!-- Info Section -->
-      <div id="infoSection">
-        <!-- Reference Image (left below the puzzle) -->
-        <div id="referenceWrapper">
-          <img id="referenceImage" src="" alt="Reference Image" />
-        </div>
+    <!-- Info Section -->
+    <div id="infoSection">
+      <!-- Reference Image (left below the puzzle) -->
+      <div id="referenceWrapper">
+        <img id="referenceImage" src="" alt="Reference Image" />
+      </div>
 
-        <!-- Timer and Move Counter (center below the puzzle) -->
-        <div id="timerMoveWrapper">
-          <div id="timer">Time: 0s</div>
-          <div id="moveCounter">Moves: 0</div>
-        </div>
-
-        <!-- Back Button (right below the puzzle) -->
-        <div id="backButtonWrapper">
-          <button id="backButton">Back</button>
+      <!-- Timer, Move Counter, and Sound Toggle (center below the puzzle) -->
+      <div id="timerMoveWrapper">
+        <div id="timer">Time: 0s</div>
+        <div id="moveCounter">Moves: 0</div>
+        
+        <!-- Sound Toggle -->
+        <div id="soundToggleWrapper">
+          <label for="soundToggle">Enable Sound:</label>
+          <input type="checkbox" id="soundToggle" checked>
         </div>
       </div>
+
+      <!-- Back Button (right below the puzzle) -->
+      <div id="backButtonWrapper">
+        <button id="backButton">Back</button>
+      </div>
     </div>
+
 
     <!-- Completion Overlay -->
     <div id="completionOverlay">

@@ -366,9 +366,12 @@ function attemptMove(tileX, tileY) {
             if (tile) {
                 // Swap the tile with the empty space
                 [tile.currentPosition, emptyTilePosition] = [emptyTilePosition, tile.currentPosition];
-                
-                // Play the move sound effect
-                moveSound.play();
+
+                // Check if sound is enabled before playing
+                const soundEnabled = document.getElementById('soundToggle').checked;
+                if (soundEnabled) {
+                    moveSound.play();
+                }
 
                 // Update move count and redraw tiles
                 moveCount++;
@@ -387,6 +390,7 @@ function attemptMove(tileX, tileY) {
     }
     return false;
 }
+
 
 
 
