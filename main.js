@@ -163,7 +163,7 @@ function startGame(imagePath, gridSize) {
 function adjustCanvasSize() {
     // Calculate the new size
     const containerWidth = gameContainer.clientWidth;
-    SCREEN_SIZE = Math.min(600, containerWidth * 0.6); // Adjust as needed
+    SCREEN_SIZE = Math.min(600, containerWidth * 0.9); // Adjust as needed
     gameCanvas.width = SCREEN_SIZE;
     gameCanvas.height = SCREEN_SIZE;
     TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
