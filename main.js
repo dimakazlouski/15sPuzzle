@@ -2,7 +2,9 @@
 
 // Image options available for selection
 const images = [
-    'images/dog.jpg',
+    'images/3x3numbers.jpg',
+    'images/4x4numbers.jpg',
+    'images/5x5numbers.jpg',
     'images/duck.jpg',
     'images/fancy.jpg',
     // Add more image paths as needed
