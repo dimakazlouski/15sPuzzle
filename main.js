@@ -4,8 +4,6 @@
 const images = [
     'images/dog.jpg',
     'images/duck.jpg',
-    //'images/image3.jpg',
-    //'images/image4.jpg',
     // Add more image paths as needed
 ];
 
