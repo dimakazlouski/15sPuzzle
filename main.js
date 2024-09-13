@@ -351,6 +351,9 @@ function handleInput(event) {
     attemptMove(tileX, tileY);
 }
 
+// Load the move sound effect
+const moveSound = new Audio('sounds/tile_sound.mp3');
+
 // Attempt to move a tile at (tileX, tileY)
 function attemptMove(tileX, tileY) {
     if (tileX >= 0 && tileX < GRID_SIZE && tileY >= 0 && tileY < GRID_SIZE) {
@@ -363,6 +366,11 @@ function attemptMove(tileX, tileY) {
             if (tile) {
                 // Swap the tile with the empty space
                 [tile.currentPosition, emptyTilePosition] = [emptyTilePosition, tile.currentPosition];
+                
+                // Play the move sound effect
+                moveSound.play();
+
+                // Update move count and redraw tiles
                 moveCount++;
                 updateMoveCounter();
                 drawTiles();
@@ -379,6 +387,7 @@ function attemptMove(tileX, tileY) {
     }
     return false;
 }
+
 
 
 // Start the timer
