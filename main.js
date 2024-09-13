@@ -1,29 +1,144 @@
 // main.js
 
-// Set up canvas and context
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+// Variables for the start screen
+const images = [
+    'images/dog.jpg',
+    'images/duck.jpg',
+    //'images/image3.jpg',
+    //'images/image4.jpg',
+    // Add more image paths as needed
+];
 
-// Game settings
-const SCREEN_SIZE = 600; // assuming square canvas
-const GRID_SIZE = 4; // You can adjust this for different grid sizes
-let TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
+let selectedImage = null;
+let selectedGridSize = 4; // Default grid size
 
+// Elements from the DOM
+const startScreen = document.getElementById('startScreen');
+const imageSelectionDiv = document.getElementById('imageSelection');
+const gridSizeSelect = document.getElementById('gridSize');
+const startButton = document.getElementById('startButton');
+const gameCanvas = document.getElementById('gameCanvas');
+const moveCounterDiv = document.getElementById('moveCounter');
+const backButton = document.getElementById('backButton'); // New Back button element
+
+// Set up the image selection
+function setupImageSelection() {
+    images.forEach((imagePath, index) => {
+        const imgDiv = document.createElement('div');
+        imgDiv.classList.add('imageOption');
+        imgDiv.dataset.imagePath = imagePath;
+
+        const imgElement = document.createElement('img');
+        imgElement.src = imagePath;
+        imgElement.alt = `Image ${index + 1}`;
+
+        imgDiv.appendChild(imgElement);
+        imageSelectionDiv.appendChild(imgDiv);
+
+        // Add click event listener to select the image
+        imgDiv.addEventListener('click', function() {
+            // Remove 'selected' class from all image options
+            document.querySelectorAll('.imageOption').forEach(option => {
+                option.classList.remove('selected');
+            });
+            // Add 'selected' class to the clicked image
+            this.classList.add('selected');
+            // Set the selected image path
+            selectedImage = this.dataset.imagePath;
+        });
+    });
+}
+
+// Handle grid size selection
+gridSizeSelect.addEventListener('change', function() {
+    selectedGridSize = parseInt(this.value);
+});
+
+// Handle start button click
+startButton.addEventListener('click', function() {
+    if (!selectedImage) {
+        alert('Please select an image.');
+        return;
+    }
+    // Hide start screen
+    startScreen.style.display = 'none';
+    // Show canvas, move counter, and back button
+    gameCanvas.style.display = 'block';
+    moveCounterDiv.style.display = 'block';
+    backButton.style.display = 'block'; // Show the back button
+
+    // Start the game with the selected options
+    startGame(selectedImage, selectedGridSize);
+});
+
+// Handle back button click
+backButton.addEventListener('click', function() {
+    exitGame();
+});
+
+// Call the setup function
+setupImageSelection();
+
+// Game variables
+let canvas, ctx;
+let SCREEN_SIZE = 600; // assuming square canvas
+let GRID_SIZE = 4;
+let TILE_SIZE;
 let tiles = []; // Array to hold tile objects
 let emptyTilePosition; // Position of the empty tile
 let moveCount = 0; // Move counter
 let gameCompleted = false; // Game state flag
+let image;
+let scaledImage; // Variable to hold the scaled image
 
-// Load the image
-const image = new Image();
-image.src = 'duck.jpg'; // Replace with your image file
-image.onload = function() {
-    // Initialize the game after the image is loaded
-    createTiles();
-    shuffleTiles();
-    drawTiles();
-    updateMoveCounter();
-};
+function startGame(imagePath, gridSize) {
+    // Initialize variables
+    canvas = gameCanvas;
+    ctx = canvas.getContext('2d');
+    GRID_SIZE = gridSize;
+    TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
+    tiles = [];
+    moveCount = 0;
+    gameCompleted = false;
+
+    // Load the image
+    image = new Image();
+    image.src = imagePath;
+    image.onload = function() {
+        // Scale the image to the canvas size
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = canvas.width;
+        offCanvas.height = canvas.height;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        scaledImage = offCanvas;
+
+        // Initialize the game after the image is loaded
+        createTiles();
+        shuffleTiles();
+        drawTiles();
+        updateMoveCounter();
+    };
+
+    // Adjust canvas size if necessary
+    canvas.width = SCREEN_SIZE;
+    canvas.height = SCREEN_SIZE;
+
+    // Attach event listeners
+    attachEventListeners();
+}
+
+function attachEventListeners() {
+    // Remove existing event listeners
+    document.removeEventListener('keydown', handleKeyDown);
+    canvas.removeEventListener('click', handleInput);
+    canvas.removeEventListener('touchstart', handleInput);
+
+    // Add new event listeners
+    document.addEventListener('keydown', handleKeyDown);
+    canvas.addEventListener('click', handleInput);
+    canvas.addEventListener('touchstart', handleInput, { passive: false });
+}
 
 // Function to create tiles
 function createTiles() {
@@ -106,7 +221,7 @@ function drawTiles() {
         let destX = tile.currentPosition.x * TILE_SIZE;
         let destY = tile.currentPosition.y * TILE_SIZE;
         ctx.drawImage(
-            image,
+            scaledImage, // Use the scaled image
             tile.imageX,
             tile.imageY,
             TILE_SIZE,
@@ -143,6 +258,27 @@ function checkWinCondition() {
     return true;
 }
 
+function handleKeyDown(event) {
+    if (gameCompleted) return;
+    let dx = 0;
+    let dy = 0;
+    if (event.key === 'ArrowLeft') {
+        dx = 1;
+    } else if (event.key === 'ArrowRight') {
+        dx = -1;
+    } else if (event.key === 'ArrowUp') {
+        dy = 1;
+    } else if (event.key === 'ArrowDown') {
+        dy = -1;
+    } else {
+        return; // Ignore other keys
+    }
+    // Calculate the position of the tile to move
+    let tileX = emptyTilePosition.x + dx;
+    let tileY = emptyTilePosition.y + dy;
+    attemptMove(tileX, tileY);
+}
+
 // Function to attempt to move a tile at (tileX, tileY)
 function attemptMove(tileX, tileY) {
     if (tileX >= 0 && tileX < GRID_SIZE && tileY >= 0 && tileY < GRID_SIZE) {
@@ -167,28 +303,6 @@ function attemptMove(tileX, tileY) {
     }
     return false;
 }
-
-// Event listener for key presses
-document.addEventListener('keydown', function(event) {
-    if (gameCompleted) return;
-    let dx = 0;
-    let dy = 0;
-    if (event.key === 'ArrowLeft') {
-        dx = 1;
-    } else if (event.key === 'ArrowRight') {
-        dx = -1;
-    } else if (event.key === 'ArrowUp') {
-        dy = 1;
-    } else if (event.key === 'ArrowDown') {
-        dy = -1;
-    } else {
-        return; // Ignore other keys
-    }
-    // Calculate the position of the tile to move
-    let tileX = emptyTilePosition.x + dx;
-    let tileY = emptyTilePosition.y + dy;
-    attemptMove(tileX, tileY);
-});
 
 // Event listener for mouse clicks and touch inputs
 function handleInput(event) {
@@ -217,9 +331,6 @@ function handleInput(event) {
 
     attemptMove(tileX, tileY);
 }
-
-canvas.addEventListener('click', handleInput);
-canvas.addEventListener('touchstart', handleInput, { passive: false });
 
 // Function to draw completion message and buttons
 function drawCompletionMessage() {
@@ -292,10 +403,30 @@ function restartGame() {
     updateMoveCounter();
 }
 
-// Function to exit the game
+// Function to exit the game (modified to handle 'Back' button)
 function exitGame() {
-    alert('Thank you for playing!');
-    // window.close(); // Note: May not work in all browsers
+    // Reset to start screen
+    gameCanvas.style.display = 'none';
+    moveCounterDiv.style.display = 'none';
+    backButton.style.display = 'none'; // Hide the back button
+    startScreen.style.display = 'flex';
+    // Clear canvas
+    if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    // Reset selected image and grid size
+    selectedImage = null;
+    selectedGridSize = 4;
+    gridSizeSelect.value = '4'; // Reset to default grid size
+    document.querySelectorAll('.imageOption').forEach(option => {
+        option.classList.remove('selected');
+    });
+    // Remove event listeners
+    document.removeEventListener('keydown', handleKeyDown);
+    if (canvas) {
+        canvas.removeEventListener('click', handleInput);
+        canvas.removeEventListener('touchstart', handleInput);
+    }
 }
 
 // Adjust canvas size

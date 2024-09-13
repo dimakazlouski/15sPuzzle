@@ -1,29 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8">
     <title>Sliding Puzzle Game</title>
     <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      #gameCanvas {
-        border: 1px solid #000;
-      }
-      #moveCounter {
-        margin-top: 10px;
-        font-family: Arial, sans-serif;
-        font-size: 24px;
-      }
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #gameCanvas {
+            border: 1px solid #000;
+            display: none; /* Hide the canvas initially */
+        }
+        #moveCounter {
+            margin-top: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            display: none; /* Hide the move counter initially */
+        }
+        /* Styles for the start screen */
+        #startScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        #imageSelection {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .imageOption {
+            margin: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .imageOption.selected {
+            border-color: #FFD700; /* Highlight selected image */
+        }
+        .imageOption img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+        #gridSizeSelection {
+            margin-bottom: 20px;
+        }
+        #startButton, #backButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4682B4; /* Button color */
+            color: #FFFFFF; /* Text color */
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        #startButton:hover, #backButton:hover {
+            background-color: #5A9BD3;
+        }
+        #backButton {
+            display: none; /* Hide initially */
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
+    <div id="startScreen">
+        <h1>Select Image and Grid Size</h1>
+        <div id="imageSelection">
+            <!-- Image options will be inserted here -->
+        </div>
+        <div id="gridSizeSelection">
+            <label for="gridSize">Select Grid Size:</label>
+            <select id="gridSize">
+                <option value="2">2 x 2</option>
+                <option value="3">3 x 3</option>
+                <option value="4" selected>4 x 4</option>
+                <option value="5">5 x 5</option>
+            </select>
+        </div>
+        <button id="startButton">Start Game</button>
+    </div>
     <canvas id="gameCanvas" width="600" height="600"></canvas>
     <div id="moveCounter">Moves: 0</div>
+    <button id="backButton">Back</button>
     <script src="main.js"></script>
-  </body>
+</body>
 </html>
