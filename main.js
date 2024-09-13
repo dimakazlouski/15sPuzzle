@@ -295,7 +295,6 @@ function restartGame() {
 // Function to exit the game
 function exitGame() {
     alert('Thank you for playing!');
-    // Optionally, you can redirect to another page or close the window
     // window.close(); // Note: May not work in all browsers
 }
 
