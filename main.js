@@ -94,10 +94,12 @@ function startGame(imagePath, gridSize) {
     canvas = gameCanvas;
     ctx = canvas.getContext('2d');
     GRID_SIZE = gridSize;
-    TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
     tiles = [];
     moveCount = 0;
     gameCompleted = false;
+
+    // Adjust canvas size based on screen size
+    adjustCanvasSize();
 
     // Load the image
     image = new Image();
@@ -118,13 +120,30 @@ function startGame(imagePath, gridSize) {
         updateMoveCounter();
     };
 
-    // Adjust canvas size if necessary
-    canvas.width = SCREEN_SIZE;
-    canvas.height = SCREEN_SIZE;
-
     // Attach event listeners
     attachEventListeners();
 }
+
+function adjustCanvasSize() {
+    const size = Math.min(window.innerWidth, window.innerHeight) - 150; // Leave some margin
+    SCREEN_SIZE = size;
+    canvas.width = SCREEN_SIZE;
+    canvas.height = SCREEN_SIZE;
+    TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
+
+    // Update tile positions
+    tiles.forEach(tile => {
+        tile.imageX = tile.position.x * TILE_SIZE;
+        tile.imageY = tile.position.y * TILE_SIZE;
+    });
+}
+
+// Add event listener for window resize
+window.addEventListener('resize', () => {
+    if (gameCanvas.style.display === 'block') {
+        adjustCanvasSize();
+    }
+});
 
 function attachEventListeners() {
     // Remove existing event listeners
