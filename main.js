@@ -6,8 +6,8 @@ const ctx = canvas.getContext('2d');
 
 // Game settings
 const SCREEN_SIZE = 600; // assuming square canvas
-const GRID_SIZE = 2;
-const TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
+const GRID_SIZE = 4; // You can adjust this for different grid sizes
+let TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
 
 let tiles = []; // Array to hold tile objects
 let emptyTilePosition; // Position of the empty tile
@@ -143,6 +143,31 @@ function checkWinCondition() {
     return true;
 }
 
+// Function to attempt to move a tile at (tileX, tileY)
+function attemptMove(tileX, tileY) {
+    if (tileX >= 0 && tileX < GRID_SIZE && tileY >= 0 && tileY < GRID_SIZE) {
+        // Check if the tile is adjacent to the empty tile
+        let dx = tileX - emptyTilePosition.x;
+        let dy = tileY - emptyTilePosition.y;
+        if ((Math.abs(dx) === 1 && dy === 0) || (dx === 0 && Math.abs(dy) === 1)) {
+            // Find the tile at that position
+            let tile = tiles.find(t => t.currentPosition.x === tileX && t.currentPosition.y === tileY);
+            if (tile) {
+                // Swap the tile with the empty space
+                [tile.currentPosition, emptyTilePosition] = [emptyTilePosition, tile.currentPosition];
+                moveCount++;
+                drawTiles();
+                if (checkWinCondition()) {
+                    gameCompleted = true;
+                    drawTiles();
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // Event listener for key presses
 document.addEventListener('keydown', function(event) {
     if (gameCompleted) return;
@@ -162,23 +187,39 @@ document.addEventListener('keydown', function(event) {
     // Calculate the position of the tile to move
     let tileX = emptyTilePosition.x + dx;
     let tileY = emptyTilePosition.y + dy;
-    if (tileX >= 0 && tileX < GRID_SIZE && tileY >= 0 && tileY < GRID_SIZE) {
-        // Find the tile at that position
-        for (let tile of tiles) {
-            if (tile.currentPosition.x === tileX && tile.currentPosition.y === tileY) {
-                // Swap the tile with the empty space
-                [tile.currentPosition, emptyTilePosition] = [emptyTilePosition, tile.currentPosition];
-                moveCount++;
-                drawTiles();
-                if (checkWinCondition()) {
-                    gameCompleted = true;
-                    drawTiles();
-                }
-                break;
-            }
-        }
-    }
+    attemptMove(tileX, tileY);
 });
+
+// Event listener for mouse clicks and touch inputs
+function handleInput(event) {
+    if (gameCompleted) return;
+
+    event.preventDefault();
+
+    let clientX, clientY;
+
+    if (event.type === 'touchstart') {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+    } else if (event.type === 'click') {
+        clientX = event.clientX;
+        clientY = event.clientY;
+    } else {
+        return;
+    }
+
+    let rect = canvas.getBoundingClientRect();
+    let x = clientX - rect.left;
+    let y = clientY - rect.top;
+
+    let tileX = Math.floor(x / TILE_SIZE);
+    let tileY = Math.floor(y / TILE_SIZE);
+
+    attemptMove(tileX, tileY);
+}
+
+canvas.addEventListener('click', handleInput);
+canvas.addEventListener('touchstart', handleInput, { passive: false });
 
 // Function to draw completion message and buttons
 function drawCompletionMessage() {
@@ -208,21 +249,37 @@ function drawButton(text, x, y, width, height, action) {
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x + width / 2, y + height / 2);
 
-    // Add event listener for clicks
+    // Add event listener for clicks and touches
     function onClick(event) {
         if (!gameCompleted) return;
 
+        event.preventDefault();
+
+        let clientX, clientY;
+
+        if (event.type === 'touchstart') {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else if (event.type === 'click') {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        } else {
+            return;
+        }
+
         let rect = canvas.getBoundingClientRect();
-        let clickX = event.clientX - rect.left;
-        let clickY = event.clientY - rect.top;
+        let clickX = clientX - rect.left;
+        let clickY = clientY - rect.top;
 
         if (clickX >= x && clickX <= x + width && clickY >= y && clickY <= y + height) {
             action();
             canvas.removeEventListener('click', onClick);
+            canvas.removeEventListener('touchstart', onClick);
         }
     }
 
     canvas.addEventListener('click', onClick);
+    canvas.addEventListener('touchstart', onClick, { passive: false });
 }
 
 // Function to restart the game
