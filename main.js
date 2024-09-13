@@ -10,7 +10,7 @@ const images = [
 
 // Variables to store selected options
 let selectedImage = null;
-let selectedGridSize = 4; // Default grid size
+let selectedGridSize = 3; // Default grid size
 
 // DOM Elements
 const startScreen = document.getElementById('startScreen');
@@ -425,8 +425,8 @@ function exitGame() {
 
     // Reset variables
     selectedImage = null;
-    selectedGridSize = 4;
-    gridSizeSelect.value = '4'; // Reset to default grid size
+    selectedGridSize = 3;
+    gridSizeSelect.value = '3'; // Reset to default grid size
 
     // Clear selections
     document.querySelectorAll('.imageOption').forEach(option => {
