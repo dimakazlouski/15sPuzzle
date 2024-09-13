@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sliding Puzzle Game</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #gameCanvas {
+        border: 1px solid #000;
+      }
+      #moveCounter {
+        margin-top: 10px;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div id="moveCounter">Moves: 0</div>
+    <script src="main.js"></script>
+  </body>
+</html>
