@@ -1,248 +1,247 @@
+// main.js
+
+// Set up canvas and context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const GRID_SIZE = 4;
-const TILE_SIZE = canvas.width / GRID_SIZE;
 
-let image = new Image();
-image.src = 'your_image.jpg'; // Replace with your image path
+// Game settings
+const SCREEN_SIZE = 600; // assuming square canvas
+const GRID_SIZE = 2;
+const TILE_SIZE = SCREEN_SIZE / GRID_SIZE;
 
-let tiles = [];
-let emptyTile = { x: GRID_SIZE - 1, y: GRID_SIZE - 1 };
-let moveCount = 0;
-let touchStartX = 0;
-let touchStartY = 0;
+let tiles = []; // Array to hold tile objects
+let emptyTilePosition; // Position of the empty tile
+let moveCount = 0; // Move counter
+let gameCompleted = false; // Game state flag
 
-let gameCompleted = false;
-
+// Load the image
+const image = new Image();
+image.src = 'duck.jpg'; // Replace with your image file
 image.onload = function() {
-    initTiles();
+    // Initialize the game after the image is loaded
+    createTiles();
     shuffleTiles();
     drawTiles();
+    updateMoveCounter();
 };
 
-function initTiles() {
+// Function to create tiles
+function createTiles() {
     tiles = []; // Reset tiles array
-    for (let y = 0; y < GRID_SIZE; y++) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-            if (x === GRID_SIZE - 1 && y === GRID_SIZE - 1) continue; // Skip last tile
-            tiles.push({ x: x, y: y, correctX: x, correctY: y });
+    for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+            let position = { x: col, y: row };
+            let tile = {
+                imageX: col * TILE_SIZE,
+                imageY: row * TILE_SIZE,
+                position: position,
+                currentPosition: { x: col, y: row }
+            };
+            tiles.push(tile);
         }
+    }
+    // Remove the last tile to create the empty space
+    let emptyTile = tiles.pop();
+    emptyTilePosition = emptyTile.position;
+}
+
+// Function to shuffle tiles
+function shuffleTiles() {
+    // Generate a solvable shuffle
+    let positions = tiles.map(tile => ({ x: tile.position.x, y: tile.position.y }));
+    do {
+        positions = shuffleArray(positions);
+    } while (!isSolvable(positions));
+
+    // Assign shuffled positions to tiles
+    for (let i = 0; i < tiles.length; i++) {
+        tiles[i].currentPosition = positions[i];
     }
 }
 
-function shuffleTiles() {
-    do {
-        // Shuffle the tiles array
-        for (let i = tiles.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-        }
+// Function to shuffle an array
+function shuffleArray(array) {
+    let newArray = array.slice(); // Copy the array
+    for (let i = newArray.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
 
-        // Assign shuffled positions
-        let index = 0;
-        for (let y = 0; y < GRID_SIZE; y++) {
-            for (let x = 0; x < GRID_SIZE; x++) {
-                if (x === GRID_SIZE - 1 && y === GRID_SIZE - 1) continue; // Skip empty tile
-                tiles[index].x = x;
-                tiles[index].y = y;
-                index++;
+// Function to check if the puzzle is solvable
+function isSolvable(positions) {
+    let inversions = 0;
+    for (let i = 0; i < positions.length; i++) {
+        for (let j = i + 1; j < positions.length; j++) {
+            let posI = positions[i].y * GRID_SIZE + positions[i].x;
+            let posJ = positions[j].y * GRID_SIZE + positions[j].x;
+            if (posI > posJ) {
+                inversions++;
             }
         }
-    } while (!isSolvable());
-}
+    }
 
-function isSolvable() {
-    // Create a one-dimensional array of tile numbers
-    const inversionArray = tiles
-        .map(tile => tile.correctY * GRID_SIZE + tile.correctX + 1);
-
-    let inversions = 0;
-    for (let i = 0; i < inversionArray.length - 1; i++) {
-        for (let j = i + 1; j < inversionArray.length; j++) {
-            if (inversionArray[i] > inversionArray[j]) inversions++;
+    // If grid size is odd, puzzle is solvable if inversions count is even
+    if (GRID_SIZE % 2 !== 0) {
+        return inversions % 2 === 0;
+    } else {
+        // If grid size is even, need to consider the row of the empty tile
+        let emptyRowFromBottom = GRID_SIZE - emptyTilePosition.y;
+        if (emptyRowFromBottom % 2 === 0) {
+            return inversions % 2 !== 0;
+        } else {
+            return inversions % 2 === 0;
         }
     }
-
-    if (GRID_SIZE % 2 === 0) {
-        inversions += emptyTile.y; // Adjust for grid parity
-    }
-
-    return inversions % 2 === 0;
 }
 
+// Function to draw tiles
 function drawTiles() {
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw each tile
     tiles.forEach(tile => {
+        let destX = tile.currentPosition.x * TILE_SIZE;
+        let destY = tile.currentPosition.y * TILE_SIZE;
         ctx.drawImage(
             image,
-            tile.correctX * TILE_SIZE,
-            tile.correctY * TILE_SIZE,
+            tile.imageX,
+            tile.imageY,
             TILE_SIZE,
             TILE_SIZE,
-            tile.x * TILE_SIZE,
-            tile.y * TILE_SIZE,
+            destX,
+            destY,
             TILE_SIZE,
             TILE_SIZE
         );
     });
+
+    // Draw move counter
+    updateMoveCounter();
+
+    // If game is completed, draw the completion message and buttons
+    if (gameCompleted) {
+        drawCompletionMessage();
+    }
 }
 
+// Function to update move counter
+function updateMoveCounter() {
+    const moveCounterDiv = document.getElementById('moveCounter');
+    moveCounterDiv.innerText = `Moves: ${moveCount}`;
+}
+
+// Function to check for win condition
+function checkWinCondition() {
+    for (let tile of tiles) {
+        if (tile.position.x !== tile.currentPosition.x || tile.position.y !== tile.currentPosition.y) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Event listener for key presses
 document.addEventListener('keydown', function(event) {
     if (gameCompleted) return;
-    let moved = false;
-    if (event.key === 'ArrowUp') {
-        moved = moveTile(emptyTile.x, emptyTile.y + 1);
-    } else if (event.key === 'ArrowDown') {
-        moved = moveTile(emptyTile.x, emptyTile.y - 1);
-    } else if (event.key === 'ArrowLeft') {
-        moved = moveTile(emptyTile.x + 1, emptyTile.y);
+    let dx = 0;
+    let dy = 0;
+    if (event.key === 'ArrowLeft') {
+        dx = 1;
     } else if (event.key === 'ArrowRight') {
-        moved = moveTile(emptyTile.x - 1, emptyTile.y);
+        dx = -1;
+    } else if (event.key === 'ArrowUp') {
+        dy = 1;
+    } else if (event.key === 'ArrowDown') {
+        dy = -1;
+    } else {
+        return; // Ignore other keys
     }
-    if (moved) {
-        moveCount++;
-        document.getElementById('moveCounter').innerText = `Moves: ${moveCount}`;
-        drawTiles();
-        if (isCompleted()) {
-            setTimeout(showCompletionMessage, 100);
+    // Calculate the position of the tile to move
+    let tileX = emptyTilePosition.x + dx;
+    let tileY = emptyTilePosition.y + dy;
+    if (tileX >= 0 && tileX < GRID_SIZE && tileY >= 0 && tileY < GRID_SIZE) {
+        // Find the tile at that position
+        for (let tile of tiles) {
+            if (tile.currentPosition.x === tileX && tile.currentPosition.y === tileY) {
+                // Swap the tile with the empty space
+                [tile.currentPosition, emptyTilePosition] = [emptyTilePosition, tile.currentPosition];
+                moveCount++;
+                drawTiles();
+                if (checkWinCondition()) {
+                    gameCompleted = true;
+                    drawTiles();
+                }
+                break;
+            }
         }
     }
 });
 
-// Touch input for mobile devices
-canvas.addEventListener('touchstart', function(event) {
-    if (gameCompleted) return;
-    event.preventDefault();
-    const touch = event.touches[0];
-    touchStartX = touch.clientX - canvas.offsetLeft;
-    touchStartY = touch.clientY - canvas.offsetTop;
-}, { passive: false });
-
-canvas.addEventListener('touchend', function(event) {
-    if (gameCompleted) return;
-    event.preventDefault();
-    const touch = event.changedTouches[0];
-    const touchEndX = touch.clientX - canvas.offsetLeft;
-    const touchEndY = touch.clientY - canvas.offsetTop;
-
-    const dx = touchEndX - touchStartX;
-    const dy = touchEndY - touchStartY;
-
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-
-    let moved = false;
-
-    // Determine swipe direction
-    if (Math.max(absDx, absDy) > 30) { // Adjust the minimum swipe distance as needed
-        if (absDx > absDy) {
-            if (dx > 0) {
-                // Swipe Right
-                moved = moveTile(emptyTile.x - 1, emptyTile.y);
-            } else {
-                // Swipe Left
-                moved = moveTile(emptyTile.x + 1, emptyTile.y);
-            }
-        } else {
-            if (dy > 0) {
-                // Swipe Down
-                moved = moveTile(emptyTile.x, emptyTile.y - 1);
-            } else {
-                // Swipe Up
-                moved = moveTile(emptyTile.x, emptyTile.y + 1);
-            }
-        }
-    }
-
-    if (moved) {
-        moveCount++;
-        document.getElementById('moveCounter').innerText = `Moves: ${moveCount}`;
-        drawTiles();
-        if (isCompleted()) {
-            setTimeout(showCompletionMessage, 100);
-        }
-    }
-}, { passive: false });
-
-function moveTile(x, y) {
-    if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return false;
-    if (Math.abs(emptyTile.x - x) + Math.abs(emptyTile.y - y) === 1) {
-        let tile = tiles.find(t => t.x === x && t.y === y);
-        if (tile) {
-            [tile.x, emptyTile.x] = [emptyTile.x, tile.x];
-            [tile.y, emptyTile.y] = [emptyTile.y, tile.y];
-            return true;
-        }
-    }
-    return false;
-}
-
-function isCompleted() {
-    return tiles.every(tile => tile.x === tile.correctX && tile.y === tile.correctY);
-}
-
-function showCompletionMessage() {
-    gameCompleted = true;
+// Function to draw completion message and buttons
+function drawCompletionMessage() {
+    // Draw overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#FFD700';
-    ctx.font = '72px Arial';
+    // Draw "Nice Job!" message
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '100px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('Nice Job!', canvas.width / 2, canvas.height / 2 - 50);
 
     // Draw buttons
-    drawButton('Again', canvas.width / 2 - 100, canvas.height / 2 + 20, 80, 40, restartGame);
-    drawButton('Exit', canvas.width / 2 + 20, canvas.height / 2 + 20, 80, 40, exitGame);
+    drawButton('Again', canvas.width / 2 - 175, canvas.height / 2 + 20, 150, 50, restartGame);
+    drawButton('Exit', canvas.width / 2 + 25, canvas.height / 2 + 20, 150, 50, exitGame);
 }
 
-function drawButton(text, x, y, width, height, callback) {
-    ctx.fillStyle = '#4682B4';
+// Function to draw a button
+function drawButton(text, x, y, width, height, action) {
+    ctx.fillStyle = '#4682B4'; // Button color
     ctx.fillRect(x, y, width, height);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '24px Arial';
+
+    ctx.fillStyle = '#FFFFFF'; // Text color
+    ctx.font = '36px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x + width / 2, y + height / 2);
 
+    // Add event listener for clicks
     function onClick(event) {
         if (!gameCompleted) return;
-        const rect = canvas.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const clickY = event.clientY - rect.top;
+
+        let rect = canvas.getBoundingClientRect();
+        let clickX = event.clientX - rect.left;
+        let clickY = event.clientY - rect.top;
+
         if (clickX >= x && clickX <= x + width && clickY >= y && clickY <= y + height) {
-            callback();
+            action();
             canvas.removeEventListener('click', onClick);
         }
     }
 
-    function onTouch(event) {
-        if (!gameCompleted) return;
-        event.preventDefault();
-        const touch = event.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const touchX = touch.clientX - rect.left;
-        const touchY = touch.clientY - rect.top;
-        if (touchX >= x && touchX <= x + width && touchY >= y && touchY <= y + height) {
-            callback();
-            canvas.removeEventListener('touchstart', onTouch);
-        }
-    }
-
     canvas.addEventListener('click', onClick);
-    canvas.addEventListener('touchstart', onTouch, { passive: false });
 }
 
+// Function to restart the game
 function restartGame() {
     moveCount = 0;
-    document.getElementById('moveCounter').innerText = `Moves: ${moveCount}`;
-    emptyTile = { x: GRID_SIZE - 1, y: GRID_SIZE - 1 };
     gameCompleted = false;
-    initTiles();
+    createTiles();
     shuffleTiles();
     drawTiles();
+    updateMoveCounter();
 }
 
+// Function to exit the game
 function exitGame() {
     alert('Thank you for playing!');
+    // Optionally, you can redirect to another page or close the window
+    // window.close(); // Note: May not work in all browsers
 }
+
+// Adjust canvas size
+canvas.width = SCREEN_SIZE;
+canvas.height = SCREEN_SIZE;
